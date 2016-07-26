@@ -108,6 +108,14 @@ class Populacao{
   public Populacao obterSubPopulacao(int quantidadePopulacao){
     return new Populacao(this.getIndividuos(quantidadePopulacao), this.cidades);
   }
+  
+  public void atualizar(Individuo[] novosIndividuos){
+    for (int contador = 0; contador < novosIndividuos.length; contador++){
+      this.individuos[this.tamanhoPopulacao - contador] = novosIndividuos[contador];
+    }
+    
+    this.avaliar();
+  }
 }
 //</editor-fold>
 
@@ -256,6 +264,8 @@ class Cidade{
   }
   
   public double distanciaCidade(Cidade cidade){
+    if (cidade == null) return 0.0;
+    
     double distanciaLatitude = Math.abs(this.getLatitudeCidade()- cidade.getLatitudeCidade());
     double distanciaLongitude = Math.abs(this.getLongitudeCidade()- cidade.getLongitudeCidade());
     return Math.sqrt(Math.pow(distanciaLatitude, 2) + Math.pow(distanciaLongitude, 2));
