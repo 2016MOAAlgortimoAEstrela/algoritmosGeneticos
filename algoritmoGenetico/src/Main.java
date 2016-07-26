@@ -6,7 +6,9 @@ import java.util.Random;
 
 //<editor-fold defaultstate="collapsed" desc="Classe Main">
 public class Main {
-  
+  public static void main(String[] args){
+    
+  }
 }
 //</editor-fold>
 
@@ -48,7 +50,7 @@ class Populacao{
   
   public void gerarIndividuos(){
     for (int contador = 0; contador < this.tamanhoPopulacao; contador++){
-      this.individuos[contador] = new Individuo(Util.numeroDeCidades);
+      this.individuos[contador] = new Individuo(this.getCidades());
     }
   }
 
@@ -93,6 +95,7 @@ class Populacao{
 //<editor-fold defaultstate="collapsed" desc="Classe Individuo">
 class Individuo{
   private ArrayList<Integer> genes;
+  private Caminhos caminhos;
   private double aptidao = 0;
 
   public Individuo(ArrayList<Integer> genes) {
@@ -100,19 +103,20 @@ class Individuo{
     this.calcularAptidao();
   }
 
-  public Individuo(int quantidadeCidades) {
-    this.genes = new ArrayList<>(quantidadeCidades);
-    Random random = new Random();
+  public Individuo(Cidades cidades) {
+    this.genes = new ArrayList<>(cidades.quantidadeCidades());
+    Random random = new Random();    
     int idIndividuo = 0;
-    for (int contador = 0; contador < quantidadeCidades; contador++){
+    for (int contador = 0; contador < cidades.quantidadeCidades(); contador++){
       do {        
-        idIndividuo = random.nextInt(quantidadeCidades);
+        idIndividuo = random.nextInt(cidades.quantidadeCidades());
       } while (genes.contains(idIndividuo));
       
       this.genes.add(idIndividuo);
     }
     
-    calcularAptidao();
+    caminhos = new Caminhos(cidades);
+    calcularAptidao();   
   }
 
   public ArrayList<Integer> getGenes() {
@@ -136,8 +140,14 @@ class Individuo{
   }
   
   private void calcularAptidao(){
+    double soma = 0.0;
+    Tupla tupla;
+    for (int contador = 0; contador < this.genes.size(); contador++){
+      tupla = new Tupla(this.genes.get(contador), this.genes.get(contador + 1));
+      soma += caminhos.distanciaCaminho(tupla);
+    }
     
-    this.setAptidao(0);
+    this.setAptidao(soma);
   }
 }
 //</editor-fold>
@@ -145,10 +155,6 @@ class Individuo{
 //<editor-fold defaultstate="collapsed" desc="Classe Caminhos">
 class Caminhos{
   public HashMap<Tupla, Double> caminhos;
-  
-  public Caminhos() {
-    this.caminhos = new HashMap<Tupla, Double>();
-  }
   
   public Caminhos(Cidades cidades) {
     this.caminhos = new HashMap<Tupla, Double>();
@@ -164,9 +170,16 @@ class Caminhos{
       Cidade cidadeInicial = cidades.getCidade(contador);
       for (int proximo = contador + 1; proximo <= cidades.quantidadeCidades(); proximo++){
         Cidade cidadeProxima = cidades.getCidade(proximo);
-        caminhos.put(new Tupla(cidadeInicial.getId(), cidadeProxima.getId()), cidadeInicial.distanciaCidade(cidadeProxima));
+        this.adicionarCaminho(new Tupla(cidadeInicial.getId(), cidadeProxima.getId()), cidadeInicial.distanciaCidade(cidadeProxima));
       }
     }
+  }
+  
+  public Double distanciaCaminho(Tupla tupla){
+    if (!this.caminhos.containsKey(tupla))
+      return Util.DISTANCIA_PADRAO;
+    
+    return this.caminhos.getOrDefault(tupla, Util.DISTANCIA_PADRAO);
   }
 }
 //</editor-fold>
@@ -296,7 +309,7 @@ class Tupla{
 //<editor-fold defaultstate="collapsed" desc="Classe Util">
 class Util{
   public static int numeroDeCidades;
-  
+  public static final Double DISTANCIA_PADRAO = 0.0;
   public static int random(int limite){
     return new Random().nextInt(limite);
   }
