@@ -48,6 +48,12 @@ class Populacao{
     }
   }
   
+  public Populacao(Individuo[] individuos, Cidades cidades){
+    this.setCidades(cidades);
+    this.setTamanhoPopulacao(individuos.length);
+    this.setIndividuos(individuos);
+  }
+  
   public void gerarIndividuos(){
     for (int contador = 0; contador < this.tamanhoPopulacao; contador++){
       this.individuos[contador] = new Individuo(this.getCidades());
@@ -88,6 +94,19 @@ class Populacao{
 
   public void setCidades(Cidades cidades) {
     this.cidades = cidades;
+  }
+  
+  public Individuo[] getIndividuos(int quantidadeIndividuos){
+    Individuo[] individuosSelecionados = new Individuo[2];
+    for (int contador = 0; contador < quantidadeIndividuos; contador++){
+      individuosSelecionados[contador] = this.getIndividuo(Util.random(this.tamanhoPopulacao));
+    }
+    
+    return individuosSelecionados;
+  }
+  
+  public Populacao obterSubPopulacao(int quantidadePopulacao){
+    return new Populacao(this.getIndividuos(quantidadePopulacao), this.cidades);
   }
 }
 //</editor-fold>
