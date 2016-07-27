@@ -31,7 +31,7 @@ public class Main {
 
 //<editor-fold defaultstate="collapsed" desc="Classe AlgoritmoGenetico">
 class AlgoritmoGenetico{
-  private Mutacao mutacao = new Selecao();
+  private Mutacao mutacao = new Mutacao();
   private Selecao selecionador = new Selecao(mutacao);
   private Cruzamento cruzamento = new Cruzamento();
   private int contator = 0;
@@ -40,18 +40,18 @@ class AlgoritmoGenetico{
     Populacao populacao = new Populacao(Util.TAMANHO_POPULACAO,  cidades);
     populacao.gerarIndividuos();
     populacao.avaliar();
-    while (!this.parar){
-      Individuo[] vencedores = selecionador.executarTorneio(populacao);
+    while (!this.parar()){
+      Individuo[] vencedores = selecionador.executarTorneio(populacao, Util.QUANTIDADE_INDIVIDUOS_TORNEIO);
       Individuo[] filhos = cruzamento.executar(vencedores);
       populacao.atualizar(filhos);
     }
+    
+    return populacao.getIndividuo(0);
   }
 
   private boolean parar(){
-    contator ++;
-    return contator <= 100;
+    return ++contator <= Util.QUANTIDADE_LIMITE_EXECUCAO;
   }
-
 }
 //</editor-fold>
 
@@ -63,13 +63,12 @@ class Selecao{
     this.mutacao = m;
   }
 
-
-  public Individuo[] executarTorneio(Populacao populacao){
-    Individuo[] filhos;
-
-    for (Individuo i : Individuo){
+  public Individuo[] executarTorneio(Populacao populacao, int quantidade){
+    Individuo[] filhos = new Individuo[quantidade];
+    Individuo[] pais = populacao.getIndividuos(quantidade);
+    for (int contador = 0; contador < quantidade; contador++){
       if (mutacao.deveExecutar())
-        mutacao.executar(i)
+        filhos[contador] = mutacao.executar(pais[contador]);
     }
 
     return filhos;
@@ -80,6 +79,7 @@ class Selecao{
 //<editor-fold defaultstate="collapsed" desc="Classe Cruzamento">
 class Cruzamento {
   public Individuo[] executar(Individuo[] individuos){
+    return new Individuo[individuos.length];
   }
 }
 //</editor-fold>
@@ -87,11 +87,11 @@ class Cruzamento {
 //<editor-fold defaultstate="collapsed" desc="Classe Mutacao">
 class Mutacao{
   public Individuo executar(Individuo i){
-
+    return new Individuo(new Cidades());
   }
 
   public boolean deveExecutar(){
-
+    return false;
   }
 }
 //</editor-fold>
@@ -144,10 +144,9 @@ class Populacao{
   }
   
   public void avaliar(){
-    for (int contador = 0; contador < this.tamanhoPopulacao; contador++) {
+    for (int contador = 0; contador < this.tamanhoPopulacao - 1; contador++) {
       Individuo individuo = this.getIndividuo(contador);
-      double aptidao = this.cidades.getCidade(individuo.getGene(contador)).distanciaCidade(null);
-      individuo.setAptidao(aptidao);
+      individuo.calcularAptidao();
     }
   }
 
@@ -199,7 +198,7 @@ class Individuo{
     int idIndividuo = 0;
     for (int contador = 0; contador < cidades.quantidadeCidades(); contador++){
       do {        
-        idIndividuo = random.nextInt(cidades.quantidadeCidades());
+        idIndividuo = random.nextInt(cidades.quantidadeCidades() + 1);
       } while (genes.contains(idIndividuo));
       
       this.genes.add(idIndividuo);
@@ -229,10 +228,10 @@ class Individuo{
     this.aptidao = aptidao;
   }
   
-  private void calcularAptidao(){
+  public void calcularAptidao(){
     double soma = 0.0;
     Tupla tupla;
-    for (int contador = 0; contador < this.genes.size(); contador++){
+    for (int contador = 0; contador < this.genes.size() - 1; contador++){
       tupla = new Tupla(this.genes.get(contador), this.genes.get(contador + 1));
       soma += caminhos.distanciaCaminho(tupla);
     }
@@ -403,6 +402,8 @@ class Util{
   public static int numeroDeCidades;
   public static final Double DISTANCIA_PADRAO = 0.0;
   public static final int TAMANHO_POPULACAO = 10;
+  public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 2;
+  public static final int QUANTIDADE_LIMITE_EXECUCAO = 100;
   public static int random(int limite){
     return new Random().nextInt(limite);
   }
