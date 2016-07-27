@@ -2,34 +2,97 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.Scanner;
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Main">
 public class Main {
   public static void main(String[] args){
-    
+    Scanner reader = new Scanner(System.in);
+    Cidades cidades = new Cidades();
+    AlgoritmoGenetico ag = new AlgoritmoGenetico();
+    int i, n;
+    double x, y;
+
+    n = reader.nextInt();
+    for (i = 0; i < n; i++){
+      x = reader.nextDouble();
+      y = reader.nextDouble();
+
+      Cidade c = new Cidade(i, new Coordenadas(x, y));
+      cidades.adicionar(c);
+    }
+    System.out.println(cidades.toString());
+    Individuo melhor = ag.executar(cidades);
+    System.out.println(melhor.toString());
   }
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe AlgoritmoGenetico">
 class AlgoritmoGenetico{
-  
+  private Mutacao mutacao = new Selecao();
+  private Selecao selecionador = new Selecao(mutacao);
+  private Cruzamento cruzamento = new Cruzamento();
+  private int contator = 0;
+
+  public Individuo executar(Cidades cidades){
+    Populacao populacao = new Populacao(Util.TAMANHO_POPULACAO,  cidades);
+    populacao.gerarIndividuos();
+    populacao.avaliar();
+    while (!this.parar){
+      Individuo[] vencedores = selecionador.executarTorneio(populacao);
+      Individuo[] filhos = cruzamento.executar(vencedores);
+      populacao.atualizar(filhos);
+    }
+  }
+
+  private boolean parar(){
+    contator ++;
+    return contator <= 100;
+  }
+
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Selecao">
 class Selecao{
+  private Mutacao mutacao;
+
+  public Selecao(Mutacao m){
+    this.mutacao = m;
+  }
+
+
+  public Individuo[] executarTorneio(Populacao populacao){
+    Individuo[] filhos;
+
+    for (Individuo i : Individuo){
+      if (mutacao.deveExecutar())
+        mutacao.executar(i)
+    }
+
+    return filhos;
+  }
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Cruzamento">
 class Cruzamento {
+  public Individuo[] executar(Individuo[] individuos){
+  }
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Mutacao">
 class Mutacao{
+  public Individuo executar(Individuo i){
+
+  }
+
+  public boolean deveExecutar(){
+
+  }
 }
 //</editor-fold>
 
@@ -339,6 +402,7 @@ class Tupla{
 class Util{
   public static int numeroDeCidades;
   public static final Double DISTANCIA_PADRAO = 0.0;
+  public static final int TAMANHO_POPULACAO = 10;
   public static int random(int limite){
     return new Random().nextInt(limite);
   }
