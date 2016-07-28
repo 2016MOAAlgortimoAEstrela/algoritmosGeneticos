@@ -7,6 +7,8 @@ import java.util.Scanner;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.stream.Stream;
 //</editor-fold>
 
@@ -77,16 +79,18 @@ public class Main {
 class AlgoritmoGenetico {
 
     private Mutacao mutacao = new Mutacao();
-    private Selecao selecionador = new Selecao(mutacao);
+    private Selecao selecionador = new Selecao();
     private Cruzamento cruzamento = new Cruzamento();
     private int contator = 0;
 
     public Individuo executar(Cidades cidades) {
         Populacao populacao = new Populacao(Util.TAMANHO_POPULACAO, cidades);
         populacao.gerarIndividuos();
+        populacao.ordenar();
         while (!this.parar()) {
-            Individuo[] vencedores = selecionador.executarTorneio(populacao);
+            Individuo[] vencedores = selecionador.executarTorneio(populacao, Util.QUANTIDADE_INDIVIDUOS_TORNEIO);
             Individuo[] filhos = cruzamento.executar(vencedores);
+            populacao = mutacao.executar(populacao);
             populacao.atualizar(filhos);
         }
 
@@ -94,7 +98,7 @@ class AlgoritmoGenetico {
     }
 
     private boolean parar() {
-        return ++contator <= Util.QUANTIDADE_LIMITE_EXECUCAO;
+        return ++contator > Util.QUANTIDADE_LIMITE_EXECUCAO;
     }
 
 }
@@ -102,44 +106,78 @@ class AlgoritmoGenetico {
 
 //<editor-fold defaultstate="collapsed" desc="Classe Selecao">
 class Selecao {
-
-    private Mutacao mutacao;
-
-    public Selecao(Mutacao m) {
-        this.mutacao = m;
-    }
-
+       
     public Individuo[] executarTorneio(Populacao populacao, int quantidade) {
-        Individuo[] filhos = new Individuo[quantidade];
-        Individuo[] pais = populacao.getIndividuos(quantidade);
-        for (int contador = 0; contador < quantidade; contador++) {
-            if (mutacao.deveExecutar()) {
-                filhos[contador] = mutacao.executar(pais[contador]);
-            }
-        }
-
-        return filhos;
+        Individuo[] vencedores = new Individuo[quantidade];
+        Individuo[] participantes = populacao.getIndividuos(quantidade);
+        for (int i = 0; i < quantidade; i++) {
+            vencedores[i] = participantes[i];
+        }        
+        return vencedores;
     }
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Cruzamento">
-class Cruzamento {
+class Cruzamento {    
+    private Individuo[] cruzar(Individuo x, Individuo y){        
+        ArrayList<Integer> genes1 = new ArrayList<Integer>(x.getGenes().size());
+        ArrayList<Integer> genes2 = new ArrayList<Integer>(x.getGenes().size());                
+        Individuo[] filhos = new Individuo[2] ;
+        int tamanho_heranca = x.getGenes().size() / 3;
+        int i;
+        
+        for (i = 0; i < tamanho_heranca; i++){          
+            genes1.add(x.getGene(i));
+            genes2.add(y.getGene(i));
+        }        
+        
+        for (i = tamanho_heranca; i < x.getGenes().size(); i++){          
+            if (!genes1.contains(y.getGene(i)))
+              genes1.add(y.getGene(i));
+            
+            if (!genes2.contains(x.getGene(i)))
+              genes2.add(x.getGene(i));                       
+        }
+        
+        for (i = 0; i < tamanho_heranca; i++){               
+            if (!genes1.contains(y.getGene(i)))
+              genes1.add(y.getGene(i));
+            
+            if (!genes2.contains(x.getGene(i)))
+              genes2.add(x.getGene(i));                       
+        }
+               
+        filhos[0] = new Individuo(x.getCaminhos(), genes1);
+        filhos[1] = new Individuo(x.getCaminhos(), genes2);
+        
+        return filhos;
+    }    
 
-    public Individuo[] executar(Individuo[] individuos) {
-        return null;
+    public Individuo[] executar(Individuo[] pais) {
+        return this.cruzar(pais[0], pais[1]);                          
     }
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Mutacao">
-class Mutacao {
+class Mutacao {    
 
-    public Individuo executar(Individuo i) {
-        return null;
+    public Populacao executar(Populacao p) {
+        for (Individuo i : p.getIndividuos()){
+            if (this.deveExecutar()){
+                i = this.mutar(i);                
+            }
+        }
+        
+        return p;
+    }
+    
+    private Individuo  mutar(Individuo i){
+        return i;        
     }
 
-    public boolean deveExecutar() {
+    private boolean deveExecutar() {
         return Boolean.TRUE;
     }
 }
@@ -196,7 +234,7 @@ class Populacao {
     }
 
     public Individuo[] getIndividuos(int quantidadeIndividuos) {
-        Individuo[] individuosSelecionados = new Individuo[2];
+        Individuo[] individuosSelecionados = new Individuo[quantidadeIndividuos];
 
         for (int contador = 0; contador < quantidadeIndividuos; contador++) {
             individuosSelecionados[contador] = this.getIndividuo(Util.random(this.tamanhoPopulacao));
@@ -211,8 +249,12 @@ class Populacao {
 
     public void atualizar(Individuo[] novosIndividuos) {
         for (int contador = 0; contador < novosIndividuos.length; contador++) {
-            this.individuos[this.tamanhoPopulacao - contador] = novosIndividuos[contador];
-        }
+            this.individuos[this.tamanhoPopulacao - (contador + 1)] = novosIndividuos[contador];
+        }                
+    }
+    
+    public void ordenar(){
+        //Arrays.sort(this.individuos, Collections.reverseOrder())
     }
 }
 //</editor-fold>
@@ -224,7 +266,8 @@ class Individuo {
     private Caminhos caminhos;
     private double aptidao = 0;
 
-    public Individuo(ArrayList<Integer> genes) {
+    public Individuo(Caminhos caminhos, ArrayList<Integer> genes) {
+        this.caminhos = caminhos;
         this.genes = genes;
         this.calcularAptidao();
     }
@@ -242,7 +285,7 @@ class Individuo {
         int idIndividuo = 0;
         for (int contador = 0; contador < cidades.quantidadeCidades(); contador++) {
             do {
-                idIndividuo = random.nextInt(cidades.quantidadeCidades() + 1);
+                idIndividuo = random.nextInt(cidades.quantidadeCidades()) + 1;
             } while (genes.contains(idIndividuo));
 
             genes.add(idIndividuo);
@@ -272,6 +315,10 @@ class Individuo {
         }
 
         this.aptidao = soma;
+    }
+    
+    public Caminhos getCaminhos(){
+        return this.caminhos;
     }
 }
 //</editor-fold>
