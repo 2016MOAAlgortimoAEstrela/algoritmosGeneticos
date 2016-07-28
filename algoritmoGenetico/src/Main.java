@@ -1,411 +1,462 @@
 //<editor-fold defaultstate="collapsed" desc="import">
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Scanner;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.stream.Stream;
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Main">
 public class Main {
-  public static void main(String[] args){
-    Scanner reader = new Scanner(System.in);
-    Cidades cidades = new Cidades();
-    AlgoritmoGenetico ag = new AlgoritmoGenetico();
-    int i, n;
-    double x, y;
 
-    n = reader.nextInt();
-    for (i = 0; i < n; i++){
-      x = reader.nextDouble();
-      y = reader.nextDouble();
+    public static Cidade strToCidade(String str) {
+        String s[] = str.split(" ");
 
-      Cidade c = new Cidade(i, new Coordenadas(x, y));
-      cidades.adicionar(c);
+        return new Cidade(
+                Integer.valueOf(s[0]),
+                new Coordenadas(
+                        Double.valueOf(s[1]),
+                        Double.valueOf(s[2])
+                ));
     }
-    System.out.println(cidades.toString());
-    Individuo melhor = ag.executar(cidades);
-    System.out.println(melhor.toString());
-  }
+
+    public static Cidades lerCidadesPrompt() {
+        Cidades cidades = new Cidades();
+        Scanner reader = new Scanner(System.in);
+        int i, n;
+
+        n = reader.nextInt();
+        for (i = 0; i < n; i++) {
+            reader.nextLine();
+            cidades.adicionar(strToCidade(reader.nextLine()));
+        }
+
+        return cidades;
+    }
+
+    public static Cidades lerCidadesArquivo(String path) {
+        try (Stream<String> stream = Files.lines(Paths.get(path))) {
+            Cidades cidades = new Cidades();
+            stream.forEach((l) -> {
+                cidades.adicionar(strToCidade(l));
+            });
+            return cidades;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void main(String[] args) {
+        AlgoritmoGenetico ag = new AlgoritmoGenetico();
+        Cidades cidades;
+        cidades = lerCidadesArquivo(
+                "C:\\Users\\Duh\\Documents\\algoritmosGeneticos\\algoritmoGenetico\\src\\input.txt"
+        );
+        /*
+        if (args.length != 0) {
+            cidades = lerCidadesArquivo(args[0]);
+        } else {
+            cidades = lerCidadesPrompt();
+        }
+         */
+
+        System.out.println(cidades.toString());
+        Individuo melhor = ag.executar(cidades);
+        System.out.println(melhor.getGenes().toString());
+        System.out.println(melhor.getAptidao());
+    }
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe AlgoritmoGenetico">
-class AlgoritmoGenetico{
-  private Mutacao mutacao = new Mutacao();
-  private Selecao selecionador = new Selecao(mutacao);
-  private Cruzamento cruzamento = new Cruzamento();
-  private int contator = 0;
+class AlgoritmoGenetico {
 
-  public Individuo executar(Cidades cidades){
-    Populacao populacao = new Populacao(Util.TAMANHO_POPULACAO,  cidades);
-    populacao.gerarIndividuos();
-    populacao.avaliar();
-    while (!this.parar()){
-      Individuo[] vencedores = selecionador.executarTorneio(populacao, Util.QUANTIDADE_INDIVIDUOS_TORNEIO);
-      Individuo[] filhos = cruzamento.executar(vencedores);
-      populacao.atualizar(filhos);
+    private Mutacao mutacao = new Mutacao();
+    private Selecao selecionador = new Selecao(mutacao);
+    private Cruzamento cruzamento = new Cruzamento();
+    private int contator = 0;
+
+    public Individuo executar(Cidades cidades) {
+        Populacao populacao = new Populacao(Util.TAMANHO_POPULACAO, cidades);
+        populacao.gerarIndividuos();
+        while (!this.parar()) {
+            Individuo[] vencedores = selecionador.executarTorneio(populacao);
+            Individuo[] filhos = cruzamento.executar(vencedores);
+            populacao.atualizar(filhos);
+        }
+
+        return populacao.getIndividuos()[0];
     }
-    
-    return populacao.getIndividuo(0);
-  }
 
-  private boolean parar(){
-    return ++contator <= Util.QUANTIDADE_LIMITE_EXECUCAO;
-  }
+    private boolean parar() {
+        return ++contator <= Util.QUANTIDADE_LIMITE_EXECUCAO;
+    }
+
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Selecao">
-class Selecao{
-  private Mutacao mutacao;
+class Selecao {
 
-  public Selecao(Mutacao m){
-    this.mutacao = m;
-  }
+    private Mutacao mutacao;
 
-  public Individuo[] executarTorneio(Populacao populacao, int quantidade){
-    Individuo[] filhos = new Individuo[quantidade];
-    Individuo[] pais = populacao.getIndividuos(quantidade);
-    for (int contador = 0; contador < quantidade; contador++){
-      if (mutacao.deveExecutar())
-        filhos[contador] = mutacao.executar(pais[contador]);
+    public Selecao(Mutacao m) {
+        this.mutacao = m;
     }
 
-    return filhos;
-  }
+    public Individuo[] executarTorneio(Populacao populacao, int quantidade) {
+        Individuo[] filhos = new Individuo[quantidade];
+        Individuo[] pais = populacao.getIndividuos(quantidade);
+        for (int contador = 0; contador < quantidade; contador++) {
+            if (mutacao.deveExecutar()) {
+                filhos[contador] = mutacao.executar(pais[contador]);
+            }
+        }
+
+        return filhos;
+    }
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Cruzamento">
 class Cruzamento {
-  public Individuo[] executar(Individuo[] individuos){
-    return new Individuo[individuos.length];
-  }
+
+    public Individuo[] executar(Individuo[] individuos) {
+        return null;
+    }
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Mutacao">
-class Mutacao{
-  public Individuo executar(Individuo i){
-    return new Individuo(new Cidades());
-  }
+class Mutacao {
 
-  public boolean deveExecutar(){
-    return false;
-  }
+    public Individuo executar(Individuo i) {
+        return null;
+    }
+
+    public boolean deveExecutar() {
+        return Boolean.TRUE;
+    }
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Populacao">
-class Populacao{
-  private Individuo[] individuos;
-  private int tamanhoPopulacao;
-  private Cidades cidades;
+class Populacao {
 
-  public Populacao(int tamanhoPopulacao, Cidades cidades) {
-    this.setTamanhoPopulacao(tamanhoPopulacao);
-    this.setCidades(cidades);
-    this.individuos = new Individuo[tamanhoPopulacao];
-    for (int contador = 0; contador < tamanhoPopulacao; contador++){
-      this.individuos[contador] = null;
+    private Individuo[] individuos;
+    private int tamanhoPopulacao;
+    private Caminhos caminhos;
+
+    public Populacao(int tamanhoPopulacao, Cidades cidades) {
+        this.setTamanhoPopulacao(tamanhoPopulacao);
+        this.caminhos = new Caminhos(cidades);
+        this.individuos = new Individuo[tamanhoPopulacao];
+        /*
+        for (int contador = 0; contador < tamanhoPopulacao; contador++) {
+            this.individuos[contador] = null;
+        }
+         */
     }
-  }
-  
-  public Populacao(Individuo[] individuos, Cidades cidades){
-    this.setCidades(cidades);
-    this.setTamanhoPopulacao(individuos.length);
-    this.setIndividuos(individuos);
-  }
-  
-  public void gerarIndividuos(){
-    for (int contador = 0; contador < this.tamanhoPopulacao; contador++){
-      this.individuos[contador] = new Individuo(this.getCidades());
+
+    public Populacao(Individuo[] individuos, Caminhos caminhos) {
+        this.caminhos = caminhos;
+        this.tamanhoPopulacao = individuos.length;
+        this.individuos = individuos;
     }
-  }
 
-  public Individuo[] getIndividuos() {
-    return individuos;
-  }
-
-  public Individuo getIndividuo(int posicao) {
-    return individuos[posicao];
-  }
-
-  public void setIndividuos(Individuo[] individuos) {
-    this.individuos = individuos;
-  }
-
-  public int getTamanhoPopulacao() {
-    return tamanhoPopulacao;
-  }
-
-  public void setTamanhoPopulacao(int tamanhoPopulacao) {
-    this.tamanhoPopulacao = tamanhoPopulacao;
-  }
-  
-  public void avaliar(){
-    for (int contador = 0; contador < this.tamanhoPopulacao - 1; contador++) {
-      Individuo individuo = this.getIndividuo(contador);
-      individuo.calcularAptidao();
+    public void gerarIndividuos() {
+        for (int contador = 0; contador < this.tamanhoPopulacao; contador++) {
+            this.individuos[contador] = new Individuo(this.caminhos);
+        }
     }
-  }
 
-  public Cidades getCidades() {
-    return cidades;
-  }
+    public Individuo[] getIndividuos() {
+        return individuos;
+    }
 
-  public void setCidades(Cidades cidades) {
-    this.cidades = cidades;
-  }
-  
-  public Individuo[] getIndividuos(int quantidadeIndividuos){
-    Individuo[] individuosSelecionados = new Individuo[2];
-    for (int contador = 0; contador < quantidadeIndividuos; contador++){
-      individuosSelecionados[contador] = this.getIndividuo(Util.random(this.tamanhoPopulacao));
+    public Individuo getIndividuo(int posicao) {
+        return individuos[posicao];
     }
-    
-    return individuosSelecionados;
-  }
-  
-  public Populacao obterSubPopulacao(int quantidadePopulacao){
-    return new Populacao(this.getIndividuos(quantidadePopulacao), this.cidades);
-  }
-  
-  public void atualizar(Individuo[] novosIndividuos){
-    for (int contador = 0; contador < novosIndividuos.length; contador++){
-      this.individuos[this.tamanhoPopulacao - contador] = novosIndividuos[contador];
+
+    public void setIndividuos(Individuo[] individuos) {
+        this.individuos = individuos;
     }
-    
-    this.avaliar();
-  }
+
+    public int getTamanhoPopulacao() {
+        return tamanhoPopulacao;
+    }
+
+    public void setTamanhoPopulacao(int tamanhoPopulacao) {
+        this.tamanhoPopulacao = tamanhoPopulacao;
+    }
+
+    public Individuo[] getIndividuos(int quantidadeIndividuos) {
+        Individuo[] individuosSelecionados = new Individuo[2];
+
+        for (int contador = 0; contador < quantidadeIndividuos; contador++) {
+            individuosSelecionados[contador] = this.getIndividuo(Util.random(this.tamanhoPopulacao));
+        }
+
+        return individuosSelecionados;
+    }
+
+    public Populacao obterSubPopulacao(int quantidadePopulacao) {
+        return new Populacao(this.getIndividuos(quantidadePopulacao), this.caminhos);
+    }
+
+    public void atualizar(Individuo[] novosIndividuos) {
+        for (int contador = 0; contador < novosIndividuos.length; contador++) {
+            this.individuos[this.tamanhoPopulacao - contador] = novosIndividuos[contador];
+        }
+    }
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Individuo">
-class Individuo{
-  private ArrayList<Integer> genes;
-  private Caminhos caminhos;
-  private double aptidao = 0;
+class Individuo {
 
-  public Individuo(ArrayList<Integer> genes) {
-    this.setGenes(genes);
-    this.calcularAptidao();
-  }
+    private ArrayList<Integer> genes;
+    private Caminhos caminhos;
+    private double aptidao = 0;
 
-  public Individuo(Cidades cidades) {
-    this.genes = new ArrayList<>(cidades.quantidadeCidades());
-    Random random = new Random();    
-    int idIndividuo = 0;
-    for (int contador = 0; contador < cidades.quantidadeCidades(); contador++){
-      do {        
-        idIndividuo = random.nextInt(cidades.quantidadeCidades() + 1);
-      } while (genes.contains(idIndividuo));
-      
-      this.genes.add(idIndividuo);
+    public Individuo(ArrayList<Integer> genes) {
+        this.genes = genes;
+        this.calcularAptidao();
     }
-    
-    caminhos = new Caminhos(cidades);
-    calcularAptidao();   
-  }
 
-  public ArrayList<Integer> getGenes() {
-    return genes;
-  }
-
-  public void setGenes(ArrayList<Integer> genes) {
-    this.genes = genes;
-  }
-  
-  public Integer getGene(int posicao){
-    return this.genes.get(posicao);
-  }
-
-  public double getAptidao() {
-    return aptidao;
-  }
-
-  public void setAptidao(double aptidao) {
-    this.aptidao = aptidao;
-  }
-  
-  public void calcularAptidao(){
-    double soma = 0.0;
-    Tupla tupla;
-    for (int contador = 0; contador < this.genes.size() - 1; contador++){
-      tupla = new Tupla(this.genes.get(contador), this.genes.get(contador + 1));
-      soma += caminhos.distanciaCaminho(tupla);
+    public Individuo(Caminhos caminhos) {
+        this.caminhos = caminhos;
+        this.genes = this.gerarGenes(caminhos.getCidades());
+        this.calcularAptidao();
     }
-    
-    this.setAptidao(soma);
-  }
+
+    public ArrayList<Integer> gerarGenes(Cidades cidades) {
+        Random random = new Random();
+        genes = new ArrayList<Integer>(cidades.quantidadeCidades());
+
+        int idIndividuo = 0;
+        for (int contador = 0; contador < cidades.quantidadeCidades(); contador++) {
+            do {
+                idIndividuo = random.nextInt(cidades.quantidadeCidades() + 1);
+            } while (genes.contains(idIndividuo));
+
+            genes.add(idIndividuo);
+        }
+
+        return genes;
+    }
+
+    public ArrayList<Integer> getGenes() {
+        return genes;
+    }
+
+    public Integer getGene(int posicao) {
+        return this.genes.get(posicao);
+    }
+
+    public double getAptidao() {
+        return this.aptidao;
+    }
+
+    private void calcularAptidao() {
+        double soma = 0.0;
+        Tupla tupla;
+        for (int contador = 0; contador < this.genes.size() - 1; contador++) {
+            tupla = new Tupla(this.genes.get(contador), this.genes.get(contador + 1));
+            soma += this.caminhos.distanciaCaminho(tupla);
+        }
+
+        this.aptidao = soma;
+    }
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Caminhos">
-class Caminhos{
-  public HashMap<Tupla, Double> caminhos;
-  
-  public Caminhos(Cidades cidades) {
-    this.caminhos = new HashMap<Tupla, Double>();
-    calcularCaminhos(cidades);
-  }
-  
-  public void adicionarCaminho(Tupla tupla, Double distancia){
-    this.caminhos.put(tupla, distancia);
-  }
-  
-  private void calcularCaminhos(Cidades cidades){
-    for (int contador = 1; contador <= cidades.quantidadeCidades(); contador++){
-      Cidade cidadeInicial = cidades.getCidade(contador);
-      for (int proximo = contador + 1; proximo <= cidades.quantidadeCidades(); proximo++){
-        Cidade cidadeProxima = cidades.getCidade(proximo);
-        this.adicionarCaminho(new Tupla(cidadeInicial.getId(), cidadeProxima.getId()), cidadeInicial.distanciaCidade(cidadeProxima));
-      }
+class Caminhos {
+
+    private HashMap<Tupla, Double> caminhos;
+    private Cidades cidades;
+
+    public Caminhos(Cidades cidades) {
+        this.cidades = cidades;
+        this.caminhos = new HashMap<Tupla, Double>();
+        calcularCaminhos(cidades);
     }
-  }
-  
-  public Double distanciaCaminho(Tupla tupla){
-    if (!this.caminhos.containsKey(tupla))
-      return Util.DISTANCIA_PADRAO;
-    
-    return this.caminhos.getOrDefault(tupla, Util.DISTANCIA_PADRAO);
-  }
+
+    public void adicionarCaminho(Tupla tupla, Double distancia) {
+        this.caminhos.put(tupla, distancia);
+    }
+
+    private void calcularCaminhos(Cidades cidades) {
+        for (int contador = 1; contador <= cidades.quantidadeCidades(); contador++) {
+            Cidade cidadeInicial = cidades.getCidade(contador);
+            for (int proximo = contador + 1; proximo <= cidades.quantidadeCidades(); proximo++) {
+                Cidade cidadeProxima = cidades.getCidade(proximo);
+                this.adicionarCaminho(new Tupla(cidadeInicial.getId(), cidadeProxima.getId()), cidadeInicial.distanciaCidade(cidadeProxima));
+            }
+        }
+    }
+
+    public Double distanciaCaminho(Tupla tupla) {
+        if (!this.caminhos.containsKey(tupla)) {
+            return Util.DISTANCIA_PADRAO;
+        }
+
+        return this.caminhos.getOrDefault(tupla, Util.DISTANCIA_PADRAO);
+    }
+
+    public Cidades getCidades() {
+        return this.cidades;
+    }
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Cidades">
-class Cidades{
-  private HashMap<Integer, Cidade> listaCidades = new HashMap<Integer, Cidade>();
-  
-  public Cidade getCidade(int posicao){
-    return this.listaCidades.get(posicao);
-  }
-  
-  public void adicionar(Cidade cidade){
-    this.listaCidades.put(cidade.getId(), cidade);
-  }
-  
-  public int quantidadeCidades(){
-    return this.listaCidades.size();
-  }
+class Cidades {
+
+    private HashMap<Integer, Cidade> listaCidades = new HashMap<Integer, Cidade>();
+
+    public Cidade getCidade(int posicao) {
+        return this.listaCidades.get(posicao);
+    }
+
+    public void adicionar(Cidade cidade) {
+        this.listaCidades.put(cidade.getId(), cidade);
+    }
+
+    public int quantidadeCidades() {
+        return this.listaCidades.size();
+    }
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Cidade">
-class Cidade{
-  private int id;
-  private Coordenadas coordenadas;
+class Cidade {
 
-  public Cidade(int id, Coordenadas coordenadas) {
-    this.setId(id);
-    this.setCoordenadas(coordenadas);
-  }
+    private int id;
+    private Coordenadas coordenadas;
 
-  public int getId() {
-    return this.id;
-  }
+    public Cidade(int id, Coordenadas coordenadas) {
+        this.setId(id);
+        this.setCoordenadas(coordenadas);
+    }
 
-  public void setId(int id) {
-    this.id = id;
-  }
+    public int getId() {
+        return this.id;
+    }
 
-  public Coordenadas getCoordenadas() {
-    return coordenadas;
-  }
+    public void setId(int id) {
+        this.id = id;
+    }
 
-  public void setCoordenadas(Coordenadas coordenadas) {
-    this.coordenadas = new Coordenadas(coordenadas.getLatitude(), coordenadas.getLongitude());
-  }
-  
-  public double getLatitudeCidade(){
-    return this.coordenadas.getLatitude();
-  }
-  
-  public double getLongitudeCidade(){
-    return this.coordenadas.getLongitude();
-  }
-  
-  public double distanciaCidade(Cidade cidade){
-    if (cidade == null) return 0.0;
-    
-    double distanciaLatitude = Math.abs(this.getLatitudeCidade()- cidade.getLatitudeCidade());
-    double distanciaLongitude = Math.abs(this.getLongitudeCidade()- cidade.getLongitudeCidade());
-    return Math.sqrt(Math.pow(distanciaLatitude, 2) + Math.pow(distanciaLongitude, 2));
-  }
+    public Coordenadas getCoordenadas() {
+        return coordenadas;
+    }
+
+    public void setCoordenadas(Coordenadas coordenadas) {
+        this.coordenadas = new Coordenadas(coordenadas.getLatitude(), coordenadas.getLongitude());
+    }
+
+    public double getLatitudeCidade() {
+        return this.coordenadas.getLatitude();
+    }
+
+    public double getLongitudeCidade() {
+        return this.coordenadas.getLongitude();
+    }
+
+    public double distanciaCidade(Cidade cidade) {
+        if (cidade == null) {
+            return 0.0;
+        }
+
+        double distanciaLatitude = Math.abs(this.getLatitudeCidade() - cidade.getLatitudeCidade());
+        double distanciaLongitude = Math.abs(this.getLongitudeCidade() - cidade.getLongitudeCidade());
+        return Math.sqrt(Math.pow(distanciaLatitude, 2) + Math.pow(distanciaLongitude, 2));
+    }
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Coordenadas">
-class Coordenadas{
-  private double latitude;
-  private double longitude;
+class Coordenadas {
 
-  public Coordenadas() {
-    Random random = new Random();
-    this.setLatitude(random.nextDouble());
-    this.setLongitude(random.nextDouble());
-  }
+    private double latitude;
+    private double longitude;
 
-  public Coordenadas(double latitude, double longitude) {
-    this.setLatitude(latitude);
-    this.setLongitude(longitude);
-  }
+    public Coordenadas() {
+        Random random = new Random();
+        this.setLatitude(random.nextDouble());
+        this.setLongitude(random.nextDouble());
+    }
 
-  public double getLatitude() {
-    return latitude;
-  }
+    public Coordenadas(double latitude, double longitude) {
+        this.setLatitude(latitude);
+        this.setLongitude(longitude);
+    }
 
-  public void setLatitude(double latitude) {
-    this.latitude = latitude;
-  }
+    public double getLatitude() {
+        return latitude;
+    }
 
-  public double getLongitude() {
-    return longitude;
-  }
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
 
-  public void setLongitude(double longitude) {
-    this.longitude = longitude;
-  }
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
+    }
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Tupla">
-class Tupla{
-  private int cidadeA;
-  private int cidadeB;
-  
-  public Tupla(int cidadeA, int cidadeB){
-    this.setCidadeA(cidadeA);
-    this.setCidadeB(cidadeB);    
-  }
+class Tupla {
 
-  public int getCidadeA() {
-    return cidadeA;
-  }
+    private int cidadeA;
+    private int cidadeB;
 
-  public void setCidadeA(int cidadeA) {
-    this.cidadeA = cidadeA;
-  }
+    public Tupla(int cidadeA, int cidadeB) {
+        this.setCidadeA(cidadeA);
+        this.setCidadeB(cidadeB);
+    }
 
-  public int getCidadeB() {
-    return cidadeB;
-  }
+    public int getCidadeA() {
+        return cidadeA;
+    }
 
-  public void setCidadeB(int cidadeB) {
-    this.cidadeB = cidadeB;
-  }
+    public void setCidadeA(int cidadeA) {
+        this.cidadeA = cidadeA;
+    }
+
+    public int getCidadeB() {
+        return cidadeB;
+    }
+
+    public void setCidadeB(int cidadeB) {
+        this.cidadeB = cidadeB;
+    }
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Util">
-class Util{
-  public static int numeroDeCidades;
-  public static final Double DISTANCIA_PADRAO = 0.0;
-  public static final int TAMANHO_POPULACAO = 10;
-  public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 2;
-  public static final int QUANTIDADE_LIMITE_EXECUCAO = 100;
-  public static int random(int limite){
-    return new Random().nextInt(limite);
-  }
+class Util {
+
+    public static int numeroDeCidades;
+    public static final Double DISTANCIA_PADRAO = 0.0;
+    public static final int TAMANHO_POPULACAO = 10;
+    public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 2;
+    public static final int QUANTIDADE_LIMITE_EXECUCAO = 100;
+
+    public static int random(int limite) {
+        return new Random().nextInt(limite);
+    }
 }
 //</editor-fold>
