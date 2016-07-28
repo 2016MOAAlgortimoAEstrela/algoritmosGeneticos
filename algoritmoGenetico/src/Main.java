@@ -9,7 +9,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.PriorityQueue;
 import java.util.stream.Stream;
+import org.omg.CORBA.portable.IndirectionException;
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Main">
@@ -56,7 +59,7 @@ public class Main {
     public static void main(String[] args) {
         AlgoritmoGenetico ag = new AlgoritmoGenetico();
         Cidades cidades;
-        cidades = lerCidadesArquivo(
+            cidades = lerCidadesArquivo(
                 "C:\\Users\\Duh\\Documents\\algoritmosGeneticos\\algoritmoGenetico\\src\\input.txt"
         );
         /*
@@ -66,8 +69,7 @@ public class Main {
             cidades = lerCidadesPrompt();
         }
          */
-
-        System.out.println(cidades.toString());
+        
         Individuo melhor = ag.executar(cidades);
         System.out.println(melhor.getGenes().toString());
         System.out.println(melhor.getAptidao());
@@ -85,9 +87,9 @@ class AlgoritmoGenetico {
 
     public Individuo executar(Cidades cidades) {
         Populacao populacao = new Populacao(Util.TAMANHO_POPULACAO, cidades);
-        populacao.gerarIndividuos();
-        populacao.ordenar();
+        populacao.gerarIndividuos();        
         while (!this.parar()) {
+            populacao.ordenar();
             Individuo[] vencedores = selecionador.executarTorneio(populacao, Util.QUANTIDADE_INDIVIDUOS_TORNEIO);
             Individuo[] filhos = cruzamento.executar(vencedores);
             populacao = mutacao.executar(populacao);
@@ -253,18 +255,21 @@ class Populacao {
         }                
     }
     
-    public void ordenar(){
-        //Arrays.sort(this.individuos, Collections.reverseOrder())
+    public void ordenar(){           
+        Comparator<Individuo> c = new Individuo();
+        Arrays.sort(this.individuos, c);
     }
 }
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Individuo">
-class Individuo {
+class Individuo implements Comparator<Individuo>{
 
     private ArrayList<Integer> genes;
     private Caminhos caminhos;
     private double aptidao = 0;
+    
+    public Individuo(){}
 
     public Individuo(Caminhos caminhos, ArrayList<Integer> genes) {
         this.caminhos = caminhos;
@@ -320,6 +325,18 @@ class Individuo {
     public Caminhos getCaminhos(){
         return this.caminhos;
     }
+
+    @Override
+    public int compare(Individuo o1, Individuo o2) {
+        double diferenca = o1.aptidao - o2.aptidao;
+        if (diferenca == 0){
+            return 0;
+        }
+        
+        return (int) (diferenca / Math.abs(diferenca));
+    }
+    
+    
 }
 //</editor-fold>
 
@@ -465,31 +482,46 @@ class Coordenadas {
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Tupla">
-class Tupla {
-
-    private int cidadeA;
-    private int cidadeB;
+class Tupla {    
+    
+    private int[] cidades;
 
     public Tupla(int cidadeA, int cidadeB) {
-        this.setCidadeA(cidadeA);
-        this.setCidadeB(cidadeB);
+        this.cidades = new int[2];
+        this.cidades[0] = cidadeA;
+        this.cidades[1] = cidadeB;        
     }
 
     public int getCidadeA() {
-        return cidadeA;
+        return this.cidades[0];
     }
 
     public void setCidadeA(int cidadeA) {
-        this.cidadeA = cidadeA;
+        this.cidades[0] = cidadeA;
     }
 
     public int getCidadeB() {
-        return cidadeB;
+        return this.cidades[1];
     }
 
     public void setCidadeB(int cidadeB) {
-        this.cidadeB = cidadeB;
+        this.cidades[1] = cidadeB;
     }
+
+    @Override
+    public int hashCode() {               
+        return Arrays.hashCode(this.cidades); 
+    }                            
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Tupla){
+            return obj.hashCode() == this.hashCode();
+        }
+        return super.equals(obj); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    
 }
 //</editor-fold>
 
@@ -500,7 +532,7 @@ class Util {
     public static final Double DISTANCIA_PADRAO = 0.0;
     public static final int TAMANHO_POPULACAO = 10;
     public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 2;
-    public static final int QUANTIDADE_LIMITE_EXECUCAO = 100;
+    public static final int QUANTIDADE_LIMITE_EXECUCAO = 1000;
 
     public static int random(int limite) {
         return new Random().nextInt(limite);
