@@ -19,7 +19,9 @@ import org.omg.CORBA.portable.IndirectionException;
 public class Main {
 
     public static Cidade strToCidade(String str) {
-        String s[] = str.split(" ");
+        String s[] = Arrays.stream(str.split(" "))
+                .filter(e -> !e.equals(""))
+                    .toArray(String[]::new);
 
         return new Cidade(
                 Integer.valueOf(s[0]),
@@ -161,8 +163,8 @@ class Selecao {
 //<editor-fold defaultstate="collapsed" desc="Classe Cruzamento">
 class Cruzamento {    
     private Individuo[] cruzar(Individuo x, Individuo y){        
-        ArrayList<Integer> genes1 = new ArrayList<Integer>(x.getGenes().size());
-        ArrayList<Integer> genes2 = new ArrayList<Integer>(x.getGenes().size());                
+        ArrayList<Integer> genes1 = new ArrayList<>(x.getGenes().size());
+        ArrayList<Integer> genes2 = new ArrayList<>(x.getGenes().size());                
         Individuo[] filhos = new Individuo[2] ;
         int tamanho_heranca = x.getGenes().size() / 3;
         int i;
@@ -195,7 +197,16 @@ class Cruzamento {
     }    
 
     public Individuo[] executar(Individuo[] pais) {
-        return this.cruzar(pais[0], pais[1]);                          
+        Individuo[] filhosArr = new Individuo[pais.length];
+        ArrayList<Individuo> filhosList = new ArrayList<>();                
+        for (int i = 0; i < pais.length / 2; i++){            
+            filhosArr = this.cruzar(pais[i], pais[(pais.length - (i + 1))]);
+            filhosList.add(filhosArr[0]);         
+            filhosList.add(filhosArr[1]);         
+        }
+               
+        filhosArr = filhosList.toArray(filhosArr);
+        return filhosArr;
     }
 }
 //</editor-fold>
@@ -566,10 +577,10 @@ class Util {
 
     public static int numeroDeCidades;
     public static final Double DISTANCIA_PADRAO = 0.0;
-    public static final int TAMANHO_POPULACAO = 10;
-    public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 2;
+    public static final int TAMANHO_POPULACAO = 100;
+    public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 25;
     public static final int QUANTIDADE_LIMITE_EXECUCAO = 1000000;
-    public static final int TAXA_MUTACAO = 2;
+    public static final int TAXA_MUTACAO = 8;
     
     public static int random(int limite) {
         return new Random().nextInt(limite);
