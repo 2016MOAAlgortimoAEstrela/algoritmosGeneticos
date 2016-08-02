@@ -60,7 +60,7 @@ public class Main {
         AlgoritmoGenetico ag = new AlgoritmoGenetico();
         Cidades cidades;
             cidades = lerCidadesArquivo(
-                "C:\\Projetos\\UEM\\MOA\\algoritmosGeneticos\\algoritmoGenetico\\src\\input.txt"
+                "C:\\Users\\Duh\\Documents\\algoritmosGeneticos\\algoritmoGenetico\\src\\input.txt"
         );
         /*
         if (args.length != 0) {
@@ -83,26 +83,64 @@ class AlgoritmoGenetico {
     private Mutacao mutacao = new Mutacao();
     private Selecao selecionador = new Selecao();
     private Cruzamento cruzamento = new Cruzamento();
+    private BuscaLocal buscaLocal = new BuscaLocal();
     private int contator = 0;
+    private long initialTime;
 
     public Individuo executar(Cidades cidades) {
+        this.initialTime = System.currentTimeMillis();
         Populacao populacao = new Populacao(Util.TAMANHO_POPULACAO, cidades);
         populacao.gerarIndividuos();        
         while (!this.parar()) {
             populacao.ordenar();
             Individuo[] vencedores = selecionador.executarTorneio(populacao, Util.QUANTIDADE_INDIVIDUOS_TORNEIO);
             Individuo[] filhos = cruzamento.executar(vencedores);
-            filhos = mutacao.executar(filhos);
+            filhos = mutacao.executar(filhos);            
+            buscaLocal.hillClimbing(populacao.getIndividuo(0));
             populacao.atualizar(filhos);
+            
         }
 
-        return populacao.getIndividuos()[0];
+        return populacao.getIndividuo(0);
     }
 
     private boolean parar() {
-        return ++contator > Util.QUANTIDADE_LIMITE_EXECUCAO;
+        return ((++contator > Util.QUANTIDADE_LIMITE_EXECUCAO)
+                || ((System.currentTimeMillis() - this.initialTime) > 9000));
     }
 
+}
+//</editor-fold>
+
+//<editor-fold defaultstate="collapsed" desc="Classe BuscaLocal">
+class BuscaLocal {
+    public Individuo sucessorDeMaiorValor(Individuo pai){
+        int tamanho =  pai.getGenes().size();
+        Individuo[] sucessores = new Individuo[tamanho / 2];               
+        for (int i = 0; i < tamanho / 2 ; i++){
+            
+            sucessores[i] = new Individuo(pai.getCaminhos(), pai.getGenes());
+            sucessores[i].inverteGenes(i, tamanho - (i + 1));            
+                                                
+        }
+        
+        Comparator<Individuo> c = new Individuo();
+        Arrays.sort(sucessores, c);
+        
+        return sucessores[0];
+    }
+    
+    public Individuo hillClimbing(Individuo i){
+        Individuo vizinho;
+        boolean continuar;
+        do{
+            vizinho = sucessorDeMaiorValor(i);                       
+            continuar = vizinho.getAptidao() < i.getAptidao();
+            if (continuar)
+                i = vizinho;
+        } while(continuar);
+        return i;        
+    }
 }
 //</editor-fold>
 
@@ -528,10 +566,10 @@ class Util {
 
     public static int numeroDeCidades;
     public static final Double DISTANCIA_PADRAO = 0.0;
-    public static final int TAMANHO_POPULACAO = 10000;
+    public static final int TAMANHO_POPULACAO = 10;
     public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 2;
-    public static final int QUANTIDADE_LIMITE_EXECUCAO = 10000;
-    public static final int TAXA_MUTACAO = 8;
+    public static final int QUANTIDADE_LIMITE_EXECUCAO = 1000000;
+    public static final int TAXA_MUTACAO = 2;
     
     public static int random(int limite) {
         return new Random().nextInt(limite);
