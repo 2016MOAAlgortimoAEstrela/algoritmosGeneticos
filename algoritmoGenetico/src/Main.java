@@ -95,11 +95,12 @@ class AlgoritmoGenetico {
         populacao.gerarIndividuos();        
         while (!this.parar()) {
             populacao.ordenar();
-            Individuo[] vencedores = selecionador.executarTorneio(populacao, Util.QUANTIDADE_INDIVIDUOS_TORNEIO);
+//            System.out.println(populacao.getIndividuo(0).getAptidao());
+            Individuo[] vencedores = selecionador.executarTorneio(populacao, Util.QUANTIDADE_INDIVIDUOS_TORNEIO);            
             Individuo[] filhos = cruzamento.executar(vencedores);
-            filhos = mutacao.executar(filhos);            
-            populacao.setIndividuo(0, buscaLocal.hillClimbing(populacao.getIndividuo(0)));            
+            filhos = mutacao.executar(filhos);                        
             populacao.atualizar(filhos);
+            populacao.setIndividuo(0, buscaLocal.hillClimbing(populacao.getIndividuo(0)));            
             
         }
 
@@ -108,7 +109,7 @@ class AlgoritmoGenetico {
 
     private boolean parar() {
         return ((++contator > Util.QUANTIDADE_LIMITE_EXECUCAO)
-                || ((System.currentTimeMillis() - this.initialTime) > 9000));
+                || ((System.currentTimeMillis() - this.initialTime) > Util.TEMPO_LIMITE_EXECUCAO));
     }
 
 }
@@ -150,8 +151,19 @@ class BuscaLocal {
 class Selecao {
        
     public Individuo[] executarTorneio(Populacao populacao, int quantidade) {
+        int qtde_populacao = populacao.getIndividuos().length;
+        int qtde_participantes = qtde_populacao;
+        if (qtde_populacao > quantidade){            
+            qtde_participantes = (quantidade + Util.random(qtde_populacao - quantidade));
+        }        
+                
         Individuo[] vencedores = new Individuo[quantidade];
-        Individuo[] participantes = populacao.getIndividuos(quantidade);
+        Individuo[] participantes = populacao.getIndividuos(qtde_participantes);
+        
+        Comparator<Individuo> c = new Individuo();
+        Arrays.sort(participantes, c);
+        
+        
         for (int i = 0; i < quantidade; i++) {
             vencedores[i] = participantes[i];
         }        
@@ -585,7 +597,8 @@ class Util {
     public static final int TAMANHO_POPULACAO = 100;
     public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 80;
     public static final int QUANTIDADE_LIMITE_EXECUCAO = 1000000;
-    public static final int TAXA_MUTACAO = 8;
+    public static final int TEMPO_LIMITE_EXECUCAO = 9000;
+    public static final int TAXA_MUTACAO = 20;
     
     public static int random(int limite) {
         return new Random().nextInt(limite);
