@@ -60,7 +60,7 @@ public class Main {
         AlgoritmoGenetico ag = new AlgoritmoGenetico();
         Cidades cidades;
             cidades = lerCidadesArquivo(
-                "C:\\Users\\Duh\\Documents\\algoritmosGeneticos\\algoritmoGenetico\\src\\input.txt"
+                "C:\\Projetos\\UEM\\MOA\\algoritmosGeneticos\\algoritmoGenetico\\src\\input.txt"
         );
         /*
         if (args.length != 0) {
@@ -92,7 +92,7 @@ class AlgoritmoGenetico {
             populacao.ordenar();
             Individuo[] vencedores = selecionador.executarTorneio(populacao, Util.QUANTIDADE_INDIVIDUOS_TORNEIO);
             Individuo[] filhos = cruzamento.executar(vencedores);
-            populacao = mutacao.executar(populacao);
+            filhos = mutacao.executar(filhos);
             populacao.atualizar(filhos);
         }
 
@@ -165,22 +165,15 @@ class Cruzamento {
 //<editor-fold defaultstate="collapsed" desc="Classe Mutacao">
 class Mutacao {    
 
-    public Populacao executar(Populacao p) {
-        for (Individuo i : p.getIndividuos()){
-            if (this.deveExecutar()){
-                i = this.mutar(i);                
-            }
+    public Individuo[] executar(Individuo[] filhos) {      
+      for (int contador = 0; contador < filhos.length; contador++){
+        int quantidadeGenes = filhos[contador].getGenes().size() - 1;
+        if (Util.random() < Util.TAXA_MUTACAO){
+          filhos[contador].inverteGenes(Util.random(quantidadeGenes), Util.random(quantidadeGenes));
         }
-        
-        return p;
-    }
-    
-    private Individuo  mutar(Individuo i){
-        return i;        
-    }
-
-    private boolean deveExecutar() {
-        return Boolean.TRUE;
+      }
+      
+      return filhos;
     }
 }
 //</editor-fold>
@@ -336,7 +329,12 @@ class Individuo implements Comparator<Individuo>{
         return (int) (diferenca / Math.abs(diferenca));
     }
     
-    
+    public void inverteGenes(int indiceGene1, int indiceGene2){
+      Integer gene1 = this.getGene(indiceGene1);
+      Integer gene2 = this.getGene(indiceGene2);
+      this.genes.set(indiceGene1, gene2);
+      this.genes.set(indiceGene2, gene1);
+    }
 }
 //</editor-fold>
 
@@ -530,12 +528,17 @@ class Util {
 
     public static int numeroDeCidades;
     public static final Double DISTANCIA_PADRAO = 0.0;
-    public static final int TAMANHO_POPULACAO = 10;
+    public static final int TAMANHO_POPULACAO = 10000;
     public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 2;
-    public static final int QUANTIDADE_LIMITE_EXECUCAO = 1000;
-
+    public static final int QUANTIDADE_LIMITE_EXECUCAO = 10000;
+    public static final int TAXA_MUTACAO = 8;
+    
     public static int random(int limite) {
         return new Random().nextInt(limite);
+    }
+    
+    public static int random() {
+        return new Random().nextInt(100);
     }
 }
 //</editor-fold>
