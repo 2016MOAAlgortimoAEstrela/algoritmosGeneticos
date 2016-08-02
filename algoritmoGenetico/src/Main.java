@@ -98,7 +98,7 @@ class AlgoritmoGenetico {
             Individuo[] vencedores = selecionador.executarTorneio(populacao, Util.QUANTIDADE_INDIVIDUOS_TORNEIO);
             Individuo[] filhos = cruzamento.executar(vencedores);
             filhos = mutacao.executar(filhos);            
-            buscaLocal.hillClimbing(populacao.getIndividuo(0));
+            populacao.setIndividuo(0, buscaLocal.hillClimbing(populacao.getIndividuo(0)));            
             populacao.atualizar(filhos);
             
         }
@@ -258,11 +258,16 @@ class Populacao {
     }
 
     public Individuo[] getIndividuos() {
-        return individuos;
+        return this.individuos;
     }
 
     public Individuo getIndividuo(int posicao) {
-        return individuos[posicao];
+        return this.individuos[posicao];
+    }
+    
+     public void setIndividuo(int posicao, Individuo i) {
+        if (this.individuos[posicao].getAptidao() > i.getAptidao())
+            this.individuos[posicao] = i;
     }
 
     public void setIndividuos(Individuo[] individuos) {
@@ -578,7 +583,7 @@ class Util {
     public static int numeroDeCidades;
     public static final Double DISTANCIA_PADRAO = 0.0;
     public static final int TAMANHO_POPULACAO = 100;
-    public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 25;
+    public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 80;
     public static final int QUANTIDADE_LIMITE_EXECUCAO = 1000000;
     public static final int TAXA_MUTACAO = 8;
     
