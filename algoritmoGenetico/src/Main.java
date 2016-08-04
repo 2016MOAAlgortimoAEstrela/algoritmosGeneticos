@@ -16,7 +16,7 @@ import org.omg.CORBA.portable.IndirectionException;
 //</editor-fold>
 
 //<editor-fold defaultstate="collapsed" desc="Classe Main">
-public class Main {
+class Main {
 
     public static Cidade strToCidade(String str) {
         String s[] = Arrays.stream(str.split(" "))
@@ -39,7 +39,13 @@ public class Main {
         n = reader.nextInt();
         for (i = 0; i < n; i++) {
             reader.nextLine();
-            cidades.adicionar(strToCidade(reader.nextLine()));
+            cidades.adicionar(
+                new Cidade(
+                    reader.nextInt(),
+                    new Coordenadas(
+                            Double.valueOf(reader.next()),
+                            Double.valueOf(reader.next())
+            )));
         }
 
         return cidades;
@@ -61,16 +67,11 @@ public class Main {
     public static void main(String[] args) {
         AlgoritmoGenetico ag = new AlgoritmoGenetico();
         Cidades cidades;
-            cidades = lerCidadesArquivo(
-                "C:\\Users\\Duh\\Documents\\algoritmosGeneticos\\algoritmoGenetico\\src\\input.txt"
-        );
-        /*
-        if (args.length != 0) {
-            cidades = lerCidadesArquivo(args[0]);
-        } else {
-            cidades = lerCidadesPrompt();
-        }
-         */
+        //cidades = lerCidadesArquivo(
+//                "C:\\Users\\Duh\\Documents\\algoritmosGeneticos\\algoritmoGenetico\\src\\input.txt"
+//        );
+       
+        cidades = lerCidadesPrompt();                
         
         Individuo melhor = ag.executar(cidades);
         System.out.println(melhor.getGenes().toString());
@@ -95,7 +96,7 @@ class AlgoritmoGenetico {
         populacao.gerarIndividuos();        
         while (!this.parar()) {
             populacao.ordenar();
-//            System.out.println(populacao.getIndividuo(0).getAptidao());
+            //System.out.println(populacao.getIndividuo(0).getAptidao());
             Individuo[] vencedores = selecionador.executarTorneio(populacao, Util.QUANTIDADE_INDIVIDUOS_TORNEIO);            
             Individuo[] filhos = cruzamento.executar(vencedores);
             filhos = mutacao.executar(filhos);                        
@@ -597,8 +598,8 @@ class Util {
     public static final int TAMANHO_POPULACAO = 100;
     public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 80;
     public static final int QUANTIDADE_LIMITE_EXECUCAO = 1000000;
-    public static final int TEMPO_LIMITE_EXECUCAO = 9000;
-    public static final int TAXA_MUTACAO = 20;
+    public static final int TEMPO_LIMITE_EXECUCAO = 20000;
+    public static final int TAXA_MUTACAO = 80;
     
     public static int random(int limite) {
         return new Random().nextInt(limite);
