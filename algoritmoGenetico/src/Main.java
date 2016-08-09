@@ -68,7 +68,7 @@ class Main {
         AlgoritmoGenetico ag = new AlgoritmoGenetico();
         Cidades cidades;
         cidades = lerCidadesArquivo(
-                "C:\\Users\\Duh\\Documents\\algoritmosGeneticos\\algoritmoGenetico\\src\\input.txt"
+                Util.ARQUIVO_CIDADES
         );
        
         //cidades = lerCidadesPrompt();                
@@ -94,18 +94,20 @@ class AlgoritmoGenetico {
         this.initialTime = System.currentTimeMillis();
         Populacao populacao = new Populacao(Util.TAMANHO_POPULACAO, cidades);
         populacao.gerarIndividuos();        
-        while (!this.parar()) {
-            System.out.println(populacao.getIndividuo(0).getAptidao());
+        System.out.println(populacao.getIndividuo(0).getAptidao());
+        while (!this.parar()) {            
             Individuo[] vencedores;            
             Individuo[] filhos;
+            
             vencedores = selecionador.executarTorneio(populacao, Util.QUANTIDADE_INDIVIDUOS_TORNEIO);            
             filhos = cruzamento.executar(vencedores, melhor != populacao.getIndividuo(0));
             filhos = mutacao.executar(filhos);                        
             populacao.atualizar(filhos);
             populacao.setIndividuo(0, buscaLocal.firstFit(populacao.getIndividuo(0)));                                               
-            if (melhor != populacao.getIndividuo(0)){                                
+            if (melhor != populacao.getIndividuo(0)){                                                
                 //populacao.setIndividuo(0, buscaLocal.hillClimbing(populacao.getIndividuo(0)));           
                 melhor = populacao.getIndividuo(0);
+                System.out.println(melhor.getAptidao());
             }            
         }
 
@@ -503,8 +505,8 @@ class Cidade {
     private Coordenadas coordenadas;
 
     public Cidade(int id, Coordenadas coordenadas) {
-        this.setId(id);
-        this.setCoordenadas(coordenadas);
+        this.id = id;
+        this.coordenadas = coordenadas;
     }
 
     public int getId() {
@@ -624,13 +626,15 @@ class Tupla {
 
 //<editor-fold defaultstate="collapsed" desc="Classe Util">
 class Util {
+    private static final String ARQUIVO_CIDADES_PATH = "C:\\Users\\Duh\\Documents\\algoritmosGeneticos\\algoritmoGenetico\\src\\";
     
     public static final Double DISTANCIA_PADRAO = 0.0;
-    public static final int TAMANHO_POPULACAO = 50;
-    public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 26;
+    public static final int TAMANHO_POPULACAO = 10;
+    public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 5;
     public static final int QUANTIDADE_LIMITE_EXECUCAO = 10000000;
     public static final int TEMPO_LIMITE_EXECUCAO = 99750;
-    public static final int TAXA_MUTACAO = 15;    
+    public static final int TAXA_MUTACAO = 40;    
+    public static final String ARQUIVO_CIDADES = ARQUIVO_CIDADES_PATH + "rl5935";
     
     public static int random(int limite) {
         return new Random().nextInt(limite);
