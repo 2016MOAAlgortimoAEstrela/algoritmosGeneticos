@@ -103,9 +103,9 @@ class AlgoritmoGenetico {
             filhos = cruzamento.executar(vencedores, melhor != populacao.getIndividuo(0));
             filhos = mutacao.executar(filhos);                        
             populacao.atualizar(filhos);
-            populacao.setIndividuo(0, buscaLocal.firstFit(populacao.getIndividuo(0)));                                               
-            if (melhor != populacao.getIndividuo(0)){                                                
-                //populacao.setIndividuo(0, buscaLocal.hillClimbing(populacao.getIndividuo(0)));           
+            //populacao.setIndividuo(0, buscaLocal.firstFit(populacao.getIndividuo(0)));                                               
+            if (melhor != populacao.getIndividuo(0)){
+                populacao.setIndividuo(0, buscaLocal.hillClimbing(populacao.getIndividuo(0)));           
                 melhor = populacao.getIndividuo(0);
                 System.out.println(melhor.getAptidao());
             }            
@@ -416,6 +416,7 @@ class Individuo implements Comparator<Individuo>{
         for (int contador = 0; contador < this.genes.size() - 1; contador++) {
             this.aptidao += this.caminhos.distanciaCaminho(new Tupla(this.genes.get(contador), this.genes.get(contador + 1)));
         }
+        this.aptidao += this.caminhos.distanciaCaminho(new Tupla(this.genes.get(this.genes.size() - 1), this.genes.get(0)));
     }
     
     public Caminhos getCaminhos(){
@@ -629,12 +630,12 @@ class Util {
     private static final String ARQUIVO_CIDADES_PATH = "C:\\Users\\Duh\\Documents\\algoritmosGeneticos\\algoritmoGenetico\\src\\";
     
     public static final Double DISTANCIA_PADRAO = 0.0;
-    public static final int TAMANHO_POPULACAO = 10;
-    public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 5;
+    public static final int TAMANHO_POPULACAO = 100;
+    public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 51;
     public static final int QUANTIDADE_LIMITE_EXECUCAO = 10000000;
     public static final int TEMPO_LIMITE_EXECUCAO = 99750;
-    public static final int TAXA_MUTACAO = 40;    
-    public static final String ARQUIVO_CIDADES = ARQUIVO_CIDADES_PATH + "rl5935";
+    public static final int TAXA_MUTACAO = 50;    
+    public static final String ARQUIVO_CIDADES = ARQUIVO_CIDADES_PATH + "att48";
     
     public static int random(int limite) {
         return new Random().nextInt(limite);
