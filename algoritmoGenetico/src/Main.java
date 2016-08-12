@@ -74,7 +74,7 @@ class Main {
         //cidades = lerCidadesPrompt();                
         
         Individuo melhor = ag.executar(cidades);
-        System.out.println(melhor.toString());        
+        //System.out.println(melhor.toString());        
     }
 }
 //</editor-fold>
@@ -86,38 +86,58 @@ class AlgoritmoGenetico {
     private Selecao selecionador = new Selecao();
     private Cruzamento cruzamento = new Cruzamento();
     private BuscaLocal buscaLocal = new BuscaLocal();
-    private int contator = 0;
+    private int repeticaoMelhor;
     private long initialTime;
+    private int geracao;
 
     public Individuo executar(Cidades cidades) {
-        Individuo melhor = null;
         this.initialTime = System.currentTimeMillis();
-        Populacao populacao = new Populacao(Util.TAMANHO_POPULACAO, cidades);
-        populacao.gerarIndividuos();        
-        System.out.println(populacao.getIndividuo(0).getAptidao());
-        while (!this.parar()) {            
+        Individuo melhor;                
+        Populacao populacao;                
+        populacao = new Populacao(Util.TAMANHO_POPULACAO, cidades);        
+        populacao.gerarIndividuos();                      
+        this.geracao = 0;
+        
+        melhor = populacao.getIndividuo(0);
+        System.out.println("Geração" + "\tSolução");
+        this.printMelhorInvidivuo(populacao);
+        
+        while (!this.parar()) {                        
             Individuo[] vencedores;            
             Individuo[] filhos;
             
+            this.geracao++;
             vencedores = selecionador.executarTorneio(populacao, Util.QUANTIDADE_INDIVIDUOS_TORNEIO);            
             filhos = cruzamento.executar(vencedores, melhor != populacao.getIndividuo(0));
             filhos = mutacao.executar(filhos);                        
-            populacao.atualizar(filhos);
-            //populacao.setIndividuo(0, buscaLocal.firstFit(populacao.getIndividuo(0)));                                               
+            populacao.atualizar(filhos);       
+            if (Util.TIPO_BUSCA_LOCAL == 1)
+                populacao.setIndividuo(0, buscaLocal.firstFit(populacao.getIndividuo(0)));                                                          
             if (melhor != populacao.getIndividuo(0)){
-                populacao.setIndividuo(0, buscaLocal.hillClimbing(populacao.getIndividuo(0)));           
+                if (Util.TIPO_BUSCA_LOCAL == 2)                
+                    populacao.setIndividuo(0, buscaLocal.hillClimbing(populacao.getIndividuo(0)));           
                 melhor = populacao.getIndividuo(0);
-                System.out.println(melhor.getAptidao());
-            }            
+                this.printMelhorInvidivuo(populacao);
+                this.repeticaoMelhor = 0;                
+            } 
+            else repeticaoMelhor++;            
         }
 
-        System.out.println(Arrays.toString(populacao.getIndividuos()));        
+        this.printMelhorInvidivuo(populacao);
         return melhor;
+    }        
+    
+    private void printMelhorInvidivuo(Populacao p){
+        System.out.println(this.geracao + "\t" + p.getIndividuo(0));        
+    }        
+    
+    private long tempoExecucaoMillis(){
+        return (System.currentTimeMillis() - this.initialTime);
     }
 
     private boolean parar() {
-        return ((++contator > Util.QUANTIDADE_LIMITE_EXECUCAO)
-                || ((System.currentTimeMillis() - this.initialTime) > Util.TEMPO_LIMITE_EXECUCAO));
+        return ((this.repeticaoMelhor > Util.QUANTIDADE_LIMITE_REPETICOES_MELHOR)
+                || ( this.tempoExecucaoMillis() > Util.TEMPO_LIMITE_EXECUCAO));
     }
 
 }
@@ -425,8 +445,9 @@ class Individuo implements Comparator<Individuo>{
 
     @Override
     public String toString() {
-        return '\n' + Arrays.toString(this.genes.toArray()) 
-                + '\n' + String.valueOf(this.getAptidao()); 
+        return String.valueOf(this.getAptidao()).replace('.', ',');
+//        return '\n' + Arrays.toString(this.genes.toArray()) 
+//                + '\n' + String.valueOf(this.getAptidao()); 
     }           
 
     @Override
@@ -632,11 +653,11 @@ class Util {
     public static final Double DISTANCIA_PADRAO = 0.0;
     public static final int TAMANHO_POPULACAO = 100;
     public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 51;
-    public static final int QUANTIDADE_LIMITE_EXECUCAO = 10000000;
-    public static final int TEMPO_LIMITE_EXECUCAO = 99750;
+    public static final int QUANTIDADE_LIMITE_REPETICOES_MELHOR = 10000000 / TAMANHO_POPULACAO;       
+    public static final int TEMPO_LIMITE_EXECUCAO = (int) (30 *60 * 1000);
     public static final int TAXA_MUTACAO = 50;    
-    public static final String ARQUIVO_CIDADES = ARQUIVO_CIDADES_PATH + "att48";
-    
+    public static final String ARQUIVO_CIDADES = ARQUIVO_CIDADES_PATH + "att532";
+    public static final int TIPO_BUSCA_LOCAL = 1;
     public static int random(int limite) {
         return new Random().nextInt(limite);
     }
