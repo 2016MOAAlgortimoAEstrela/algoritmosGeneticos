@@ -1,0 +1,1 @@
+for %%f in (*.) do java Main %%f 0 > Resultados\%%f.txt

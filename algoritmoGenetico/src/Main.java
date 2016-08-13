@@ -67,14 +67,19 @@ class Main {
     public static void main(String[] args) {
         AlgoritmoGenetico ag = new AlgoritmoGenetico();
         Cidades cidades;
-        cidades = lerCidadesArquivo(
-                Util.ARQUIVO_CIDADES
-        );
-       
-        //cidades = lerCidadesPrompt();                
+        String arquivo;
         
-        Individuo melhor = ag.executar(cidades);
-        //System.out.println(melhor.toString());        
+        if (args.length > 0){
+            arquivo = args[0];
+            ag.setTipoBuscaLocal(Integer.valueOf(args[1]));        
+            System.out.println("Arquivo: " + args[0]);
+            System.out.println("Tipo Busca Local: " + args[1]);
+        }
+        else arquivo = Util.ARQUIVO_CIDADES;    
+        
+        cidades = lerCidadesArquivo(arquivo);   
+        
+        Individuo melhor = ag.executar(cidades);        
     }
 }
 //</editor-fold>
@@ -89,7 +94,8 @@ class AlgoritmoGenetico {
     private int repeticaoMelhor;
     private long initialTime;
     private int geracao;
-
+    private int tipoBuscaLocal = Util.TIPO_BUSCA_LOCAL;   
+    
     public Individuo executar(Cidades cidades) {
         this.initialTime = System.currentTimeMillis();
         Individuo melhor;                
@@ -111,10 +117,10 @@ class AlgoritmoGenetico {
             filhos = cruzamento.executar(vencedores, melhor != populacao.getIndividuo(0));
             filhos = mutacao.executar(filhos);                        
             populacao.atualizar(filhos);       
-            if (Util.TIPO_BUSCA_LOCAL == 1)
+            if (this.tipoBuscaLocal == 1)
                 populacao.setIndividuo(0, buscaLocal.firstFit(populacao.getIndividuo(0)));                                                          
             if (melhor != populacao.getIndividuo(0)){
-                if (Util.TIPO_BUSCA_LOCAL == 2)                
+                if (this.tipoBuscaLocal == 2)                
                     populacao.setIndividuo(0, buscaLocal.hillClimbing(populacao.getIndividuo(0)));           
                 melhor = populacao.getIndividuo(0);
                 this.printMelhorInvidivuo(populacao);
@@ -138,6 +144,10 @@ class AlgoritmoGenetico {
     private boolean parar() {
         return ((this.repeticaoMelhor > Util.QUANTIDADE_LIMITE_REPETICOES_MELHOR)
                 || ( this.tempoExecucaoMillis() > Util.TEMPO_LIMITE_EXECUCAO));
+    }
+    
+    public void setTipoBuscaLocal(int tipo){
+        this.tipoBuscaLocal = tipo;
     }
 
 }
@@ -651,12 +661,12 @@ class Util {
     private static final String ARQUIVO_CIDADES_PATH = "C:\\Users\\Duh\\Documents\\algoritmosGeneticos\\algoritmoGenetico\\src\\";
     
     public static final Double DISTANCIA_PADRAO = 0.0;
-    public static final int TAMANHO_POPULACAO = 100;
-    public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 51;
+    public static final int TAMANHO_POPULACAO = 10;
+    public static final int QUANTIDADE_INDIVIDUOS_TORNEIO = 9;
     public static final int QUANTIDADE_LIMITE_REPETICOES_MELHOR = 10000000 / TAMANHO_POPULACAO;       
     public static final int TEMPO_LIMITE_EXECUCAO = (int) (30 *60 * 1000);
     public static final int TAXA_MUTACAO = 50;    
-    public static final String ARQUIVO_CIDADES = ARQUIVO_CIDADES_PATH + "att532";
+    public static final String ARQUIVO_CIDADES = "src//att532";
     public static final int TIPO_BUSCA_LOCAL = 1;
     public static int random(int limite) {
         return new Random().nextInt(limite);
