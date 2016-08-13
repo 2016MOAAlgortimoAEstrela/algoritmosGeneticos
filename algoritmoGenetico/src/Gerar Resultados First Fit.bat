@@ -1,1 +1,1 @@
-for %%f in (*.) do java Main %%f 1 > Resultados\%%f.txt
+for %%f in (*.) do java Main %%f 1 > Resultados\FirstFit\%%f.txt

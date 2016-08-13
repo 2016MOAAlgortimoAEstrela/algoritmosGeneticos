@@ -1,1 +1,1 @@
-for %%f in (*.) do java Main %%f 2 > Resultados\%%f.txt
+for %%f in (*.) do java Main %%f 2 > Resultados\HillClimbing\%%f.txt
